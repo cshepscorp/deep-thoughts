@@ -1,4 +1,6 @@
 const { User, Thought } = require('../models');
+// built-in error handling from gql
+const { AuthenticationError } = require('apollo-server-express');
 
 // serve responses
 const resolvers = {
@@ -29,6 +31,30 @@ const resolvers = {
         .populate('thoughts');
     },
     //  We don't have to worry about error handling here because Apollo can infer if something goes wrong and will respond for us
+  },
+  Mutation: {
+    addUser: async (parent, args) => {
+      // Mongoose User model creates a new user in the database with whatever is passed in as the args
+      const user = await User.create(args);
+
+      return user;
+    },
+    login: async (parent, { email, password }) => {
+      const user = await User.findOne({ email });
+
+      // Normally, throwing an error like this would cause your server to crash, but GraphQL will catch the error and send it to the client instead.
+      if (!user) {
+        throw new AuthenticationError('Incorrect credentials');
+      }
+
+      const correctPw = await user.isCorrectPassword(password);
+
+      if (!correctPw) {
+        throw new AuthenticationError('Incorrect credentials');
+      }
+
+      return user;
+    },
   },
 };
 
