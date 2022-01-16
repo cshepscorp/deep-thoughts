@@ -6,6 +6,18 @@ const { signToken } = require('../utils/auth');
 // serve responses
 const resolvers = {
   Query: {
+    me: async (parent, args, context) => {
+      if (context.user) {
+        const userData = await User.findOne({ _id: context.user._id })
+          .select('-__v -password')
+          .populate('thoughts')
+          .populate('friends');
+
+        return userData;
+      }
+
+      throw new AuthenticationError('Not logged in');
+    },
     // retrieve an array of all thought data from the database
     // we pass in the parent as more of a placeholder parameter. It won't be used, but we need something in that first parameter's spot so we can access the username argument from the second parameter. deconstruct the username from the parent
     thoughts: async (parent, { username }) => {
@@ -21,15 +33,15 @@ const resolvers = {
     users: async () => {
       return User.find()
         .select('-__v -password')
-        .populate('friends')
-        .populate('thoughts');
+        .populate('thoughts')
+        .populate('friends');
     },
     // get user by username
     user: async (parent, { username }) => {
       return User.findOne({ username })
         .select('-__v -password') // omit the Mongoose-specific __v property and the user's password information
-        .populate('friends')
-        .populate('thoughts');
+        .populate('thoughts')
+        .populate('friends');
     },
     //  We don't have to worry about error handling here because Apollo can infer if something goes wrong and will respond for us
   },
@@ -57,6 +69,56 @@ const resolvers = {
 
       const token = signToken(user);
       return { token, user };
+    },
+    // Only logged-in users should be able to use this mutation, hence why we check for the existence of context.user first
+    // decoded JWT is only added to context if the verification passes. The token includes the user's username, email, and _id properties, which become properties of context.user and can be used in the follow-up Thought.create() and User.findByIdAndUpdate() methods
+    addThought: async (parent, args, context) => {
+      if (context.user) {
+        const thought = await Thought.create({
+          ...args,
+          username: context.user.username,
+        });
+
+        await User.findByIdAndUpdate(
+          { _id: context.user._id },
+          { $push: { thoughts: thought._id } },
+          { new: true } // without the { new: true } flag in User.findByIdAndUpdate(), Mongo would return the original document instead of the updated document
+        );
+
+        return thought;
+      }
+      throw new AuthenticationError('you need to be logged in!');
+    },
+    addReaction: async (parent, { thoughtId, reactionBody }, context) => {
+      if (context.user) {
+        const updatedThought = await Thought.findOneAndUpdate(
+          { _id: thoughtId },
+          // Reactions are stored as arrays on the Thought model, so you'll use the Mongo $push operator
+          {
+            $push: {
+              reactions: { reactionBody, username: context.user.username },
+            },
+          },
+          { new: true, runValidators: true }
+        );
+
+        return updatedThought;
+      }
+
+      throw new AuthenticationError('you need to be logged in!');
+    },
+    addFriend: async (parent, { friendId }, context) => {
+      if (context.user) {
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: context.user._id },
+          { $addToSet: { friends: friendId } }, // A user can't be friends with the same person twice, so we're using the $addToSet operator instead of $push to prevent duplicate entries
+          { new: true }
+        ).populate('friends');
+
+        return updatedUser;
+      }
+
+      throw new AuthenticationError('you need to be logged in!');
     },
   },
 };

@@ -1,6 +1,7 @@
 const express = require('express');
 // import ApolloServer
 const { ApolloServer } = require('apollo-server-express');
+const { authMiddleware } = require('./utils/auth');
 
 // import typeDefs and resovers
 const { typeDefs, resolvers } = require('./schemas');
@@ -16,8 +17,10 @@ const startServer = async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    // removing this code below allowed the playground to run
-    // context: authMiddleware,
+    // This would see the incoming request and return only the headers. On the resolver side, those headers would become the context parameter
+    // ensures that every request performs an authentication check, and the updated request object will be passed to the resolvers as the context.
+
+    context: authMiddleware,
   });
 
   // Start the Apollo server
