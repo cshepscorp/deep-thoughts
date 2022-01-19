@@ -18,7 +18,6 @@ export const QUERY_THOUGHTS = gql`
   }
 `;
 
-// single thought
 export const QUERY_THOUGHT = gql`
   query thought($id: ID!) {
     thought(_id: $id) {
@@ -53,6 +52,50 @@ export const QUERY_USER = gql`
         thoughtText
         createdAt
         reactionCount
+      }
+    }
+  }
+`;
+
+// Because we aren't passing any variables to it, we can simply name the query, and GraphQL will handle the rest.
+export const QUERY_ME = gql`
+  {
+    me {
+      _id
+      username
+      email
+      friendCount
+      thoughts {
+        _id
+        thoughtText
+        createdAt
+        reactionCount
+        reactions {
+          _id
+          createdAt
+          reactionBody
+          username
+        }
+      }
+      friends {
+        _id
+        username
+      }
+    }
+  }
+`;
+
+// this query is for users homepage, not their full profile page
+export const QUERY_ME_BASIC = gql`
+  {
+    me {
+      _id
+      username
+      email
+      friendCount
+      friends {
+        _id
+        username
       }
     }
   }

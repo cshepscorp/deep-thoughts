@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useMutation } from "@apollo/client";
 import { ADD_USER } from "../utils/mutations";
+import Auth from "../utils/auth";
 
 const Signup = () => {
   const [formState, setFormState] = useState({
@@ -9,8 +10,8 @@ const Signup = () => {
     password: "",
   });
 
-  const [addUser, { error }] = useMutation(ADD_USER); // useMutation() Hook creates and prepares a JavaScript function that wraps around our mutation code and returns it to us
-  // remember- a CLOSURE executes a function that scopes data to a new function and returns it to run at a later time
+  // useMutation() Hook creates and prepares a JavaScript function that wraps around our mutation code and returns it to us. In our case, it returns in the form of the addUser function that's returned - aka closure
+  const [addUser, { error }] = useMutation(ADD_USER);
 
   // update state based on form input changes
   const handleChange = (event) => {
@@ -26,14 +27,15 @@ const Signup = () => {
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
-    // use try/catch instead of promises for errors
+    // use try/catch instead of promises for error handling
+    // pass the data from the form state object as variables for our addUser mutation function
     try {
-      // pass the data from the form state object as variables for our addUser mutation function;
-      // once received we destructure that data and use it to check for our token
+      // execute addUser mutation and pass in variable data from form
       const { data } = await addUser({
-        variables: { ...formState },
+        variables: { ...formState }, // spread operator! setting the variables field in our mutation to be an object with key/value pairs that match directly to what our formState object looks like
       });
       console.log(data);
+      Auth.login(data.addUser.token);
     } catch (e) {
       console.error(e);
     }

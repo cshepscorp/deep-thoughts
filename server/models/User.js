@@ -41,7 +41,6 @@ const userSchema = new Schema(
 );
 
 // set up pre-save middleware to create password
-// use this same middleware for both new users and users who are updating their information but don't want to update their password values
 userSchema.pre('save', async function(next) {
   if (this.isNew || this.isModified('password')) {
     const saltRounds = 10;
