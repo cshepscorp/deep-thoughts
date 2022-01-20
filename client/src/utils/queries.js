@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from '@apollo/client';
 
 export const QUERY_THOUGHTS = gql`
   query thoughts($username: String) {
@@ -57,7 +57,6 @@ export const QUERY_USER = gql`
   }
 `;
 
-// Because we aren't passing any variables to it, we can simply name the query, and GraphQL will handle the rest.
 export const QUERY_ME = gql`
   {
     me {
@@ -85,7 +84,6 @@ export const QUERY_ME = gql`
   }
 `;
 
-// this query is for users homepage, not their full profile page
 export const QUERY_ME_BASIC = gql`
   {
     me {
