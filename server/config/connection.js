@@ -5,6 +5,8 @@ mongoose.connect(
   {
     useNewUrlParser: true, 
     useUnifiedTopology: true,
+    useCreateIndex: true, // apply to v5 but break v6
+    useFindAndModify: false
   }
 );
 

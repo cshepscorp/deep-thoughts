@@ -4,7 +4,6 @@ const db = require("../config/connection");
 const { Thought, User } = require("../models");
 
 db.once("open", async () => {
-
   await Thought.deleteMany({});
   await User.deleteMany({});
 
@@ -20,6 +19,10 @@ db.once("open", async () => {
   }
 
   const createdUsers = await User.collection.insertMany(userData);
+  console.log("===========console.log(createdUsers);======");
+  console.log(createdUsers);
+  
+  const
 
   // create friends
   for (let i = 0; i < 100; i += 1) {
